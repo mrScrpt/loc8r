@@ -3,16 +3,16 @@ extends layout
 block content
     .row.page-header
         .col-lg-12
-            h1 Review Starcups
+            h1= pageHeader.title
     .row
         .col-xs-12.col-md-6
             form.form-horizontal(action="/location", method="get", role="form")
                 .form-group
-                    label.col-xs-10.col-sm-2.control-label(for="name") Name
+                    label.col-xs-10.col-sm-2.control-label(for="name") Имя
                     .col-xs-12.col-sm-10
                         input#name.form-control(name="name")
                 .form-group
-                    label.col-xs-10.col-sm-2.control-label(for="rating") Rating
+                    label.col-xs-10.col-sm-2.control-label(for="rating") Рейтинг
                     .col-xs-12.col-sm-2
                         select#rating.form-control.input-sm(name="rating")
                             option 5
