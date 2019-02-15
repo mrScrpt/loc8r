@@ -3,7 +3,7 @@ mongoose.set('useCreateIndex', true);
 
 let dbURI = 'mongodb://localhost/Loc8r';
 if(process.env.NODE_ENV === 'production'){
-  dbURI = process.env.MONGOLAB_URI;
+  dbURI = process.env.MOGODB_URL;
 
 }
 mongoose.connect(dbURI, {useNewUrlParser: true})
