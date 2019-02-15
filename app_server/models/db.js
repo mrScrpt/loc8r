@@ -1,7 +1,11 @@
 let mongoose = require('mongoose');
+mongoose.set('useCreateIndex', true);
 
+let dbURI = 'mongodb://localhost/Loc8r';
+if(process.env.NODE_ENV === 'production'){
+  dbURI = process.env.MONGOLAB_URI;
 
-const dbURI = 'mongodb://localhost/Loc8r';
+}
 mongoose.connect(dbURI, {useNewUrlParser: true})
   .then(res=>{
     console.log('Подключены к ' + dbURI)
@@ -39,3 +43,5 @@ process.on('SIGTERM', function() {
     process.exit(0);
   });
 });
+
+require('./locations');
