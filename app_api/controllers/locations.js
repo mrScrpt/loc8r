@@ -3,7 +3,7 @@ const
   ,Loc = mongoose.model('Location');
 
 //модуль для перевода радиан в километры и обратно
-const theEarch = (()=>{
+const theEarth = (()=>{
   const earthRadius = 6371;
   const getDistanceFromRads = (rads)=>{
     return parseFloat( rads * earthRadius);
@@ -25,33 +25,64 @@ module.exports.locationsListByDistance = function(req, res) {
   const
     lng = parseFloat(req.query.lng)
     ,lat = parseFloat(req.query.lat)
+    ,maxDistance = parseFloat(req.query.maxDistance);
 
-    ,point = {
-      type: "Point"
-      ,coordinates: [lng,lat]
-    }
-    ,geoOption = {
-      spherical: true
-      ,maxDistance: theEarch.getRadsFromDistance(20)
-      ,num: 10
+    const point = {
+      type: "Point",
+      coordinates: [lng, lat]
     };
 
-  Loc.geoNear(point,geoOption,(err, result, stats)=>{
-    const locations = [];
-    result.forEach((doc)=>{
-      locations.push({
-        distance: theEarch.getDistanceFromRads(doc.dis)
-        ,name: doc.obj.name
-        ,address: doc.obj.address
-        ,rating: doc.obj.rating
-        ,facilities: doc.obj.facilities
-        ,_id: doc.obj._id
-      });
-    });
-    sendJSONresponse(res, 200, locations)
-  })
-};
+    var geoOptions = {
+      spherical: true,
+      maxDistance: theEarth.getRadsFromDistance(maxDistance),
+      num: 2
+    };
 
+    console.log('geoOptions: ' + geoOptions);
+    if ((!lng && lng!==0) || (!lat && lat!==0)) {
+      console.log('locationsListByDistance missing params');
+      sendJSONresponse(res, 404, {
+        "message": "lng, lat and maxDistance query parameters are all required"
+      });
+      return;
+    } else {
+      console.log('locationsListByDistance running...');
+      Loc.aggregate(
+        [{
+          '$geoNear': {
+            'near': point,
+            'spherical': true,
+            'distanceField': 'dist.calculated',
+            'maxDistance': theEarth.getRadsFromDistance(maxDistance),
+
+          }
+        }],
+        function(err, results) {
+          if (err) {
+            sendJSONresponse(res, 404, err);
+          } else {
+            locations = buildLocationList(req, res, results);
+            sendJSONresponse(res, 200, locations);
+          }
+        }
+      )
+    };
+};
+var buildLocationList = function(req, res, results) {
+  console.log('buildLocationList:');
+  var locations = [];
+  results.forEach(function(doc) {
+    locations.push({
+      distance: doc.dist.calculated,
+      name: doc.name,
+      address: doc.address,
+      rating: doc.rating,
+      facilities: doc.facilities,
+      _id: doc._id
+    });
+  });
+  return locations;
+};
 
 
 module.exports.locationsCreate = function(req, res) {
