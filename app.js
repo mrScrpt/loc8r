@@ -1,14 +1,18 @@
+//mongoose
+require('./app_api/models/db');
+
 const createError = require('http-errors')
   ,express = require('express')
   ,path = require('path')
   ,cookieParser = require('cookie-parser')
   ,logger = require('morgan')
-  ,indexRouter = require('./app_server/routes/index')
-  ,usersRouter = require('./app_server/routes/users')
+  ,routes = require('./app_server/routes/index')
+  ,users = require('./app_server/routes/users')
+  ,routesApi = require('./app_api/routes/index')
   ,app = express();
 
-//mongoose
-require('./app_server/models/db');
+
+
 // view engine setup
 app.set('views', path.join(__dirname, 'app_server', 'views'));
 app.set('view engine', 'pug');
@@ -19,8 +23,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+app.use('/', routes);
+app.use('/api', routesApi);
+app.use('/users', users);
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

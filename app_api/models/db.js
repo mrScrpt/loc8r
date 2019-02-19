@@ -4,9 +4,6 @@ mongoose.set('useCreateIndex', true);
 let dbURI = 'mongodb://localhost/Loc8r';
 if(process.env.NODE_ENV === 'production'){
   dbURI = process.env.MOGODB_URL;
-  //process.env.MOGODB_URL;
-  //'mongodb+srv://loc8r:101601630@cluster0-opkol.gcp.mongodb.net/test?retryWrites=true';
-
 }
 mongoose.connect(dbURI, {useNewUrlParser: true})
   .then(res=>{
