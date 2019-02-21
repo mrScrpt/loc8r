@@ -54,26 +54,22 @@ module.exports.locationsListByDistance = function(req, res) {
             ,'maxDistance': theEarth.getDistanceFromRads(maxDistance)
 
           }
-        }],
-        (err, results)=> {
-          if (err) {
-            sendJSONresponse(res, 404, err);
-          } else {
-            locations = buildLocationList(req, res, results);
-            sendJSONresponse(res, 200, locations);
-          }
-        }
-      )
+        }])
+        .then(data =>{
+          locations = buildLocationList(req, res, data);
+          sendJSONresponse(res, 200, locations);
+        })
+        .catch(err =>{
+          sendJSONresponse(res, 404, err);
+        })
     }
 };
 
 
-
-var buildLocationList = function(req, res, results) {
-  //console.log('buildLocationList:');
-  var locations = [];
-  results.forEach(function(doc) {
-    console.log("Дистанция", theEarth.getRadsFromDistance(doc.dist.calculated));
+//функция для упаковки результатов в массив для ответа api
+const buildLocationList = function(req, res, results) {
+  const locations = [];
+  results.forEach((doc)=> {
     locations.push({
       distance: theEarth.getRadsFromDistance(doc.dist.calculated),
       name: doc.name,
