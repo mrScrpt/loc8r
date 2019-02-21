@@ -1,11 +1,76 @@
-var mongoose = require('mongoose');
-var Loc = mongoose.model('Location');
+const
+  mongoose = require('mongoose'),
+  Loc = mongoose.model('Location');
 
-var sendJSONresponse = function(res, status, content) {
+//Вспомагательная функция, которая отпраляет запросы и статус
+const sendJSONresponse = (res, status, content) => {
   res.status(status);
   res.json(content);
 };
-module.exports.reviewsReadOne = function(req, res) {
+
+//Вспомагательная функция для добавления и сохранения отзыва
+const doAddReview = (req, res, location)=>{
+  if(!location){
+    sendJSONresponse(res, 404, {
+      "message":"location Id not found"
+    });
+  } else {
+    location.reviews.push({
+      author: req.body.author
+      ,rating: req.body.rating
+      ,reviewText: req.body.reviewText
+    });
+    location
+      .save()
+      .then(location=>{
+        updateAverageRating(location._id);
+        const thisReview = location.reviews[location.reviews.length - 1];
+        sendJSONresponse(res, 201, thisReview)
+      })
+      .catch(err=>{
+        sendJSONresponse(res, 400, err)
+      })
+  }
+};
+const updateAverageRating = (locationid)=>{
+  Loc
+    .findById(locationid)
+    .select()
+    .exec()
+    .then(location=>{
+      doSetAverageRating(location);
+    })
+    .catch(err=>{
+      console.log(err)
+    })
+};
+
+const doSetAverageRating = (location)=>{
+  let reviewCount, ratingAverage, ratingTotal;
+  if(location.reviews && location.reviews.length > 0 ){
+
+    reviewCount = location.reviews.length;
+    ratingTotal = 0;
+    for (let i = 0; i < reviewCount; i++ ){
+      ratingTotal = ratingTotal + location.reviews[i].rating;
+      console.log(ratingTotal);
+    }
+    ratingAverage = parseInt(ratingTotal / reviewCount, 10)
+    location.rating = ratingAverage;
+    console.log('sssssssss', ratingAverage);
+    location
+      .save()
+      .then(()=>{
+        console.log('Average rating update to', ratingAverage);
+      })
+      .catch(err =>{
+        console.log(err);
+      })
+
+  }
+};
+
+module.exports.reviewsReadOne = (req, res) => {
   if (req.params && req.params.locationid && req.params.reviewid){
     Loc
       .findById(req.params.locationid)
@@ -52,4 +117,24 @@ module.exports.reviewsReadOne = function(req, res) {
     })
   }
 
+};
+
+module.exports.reviewsCreate = (req, res)=>{
+  const locationid = req.params.locationid;
+  if (locationid) {
+    Loc
+      .findById(locationid)
+      .select('reviews')
+      .exec()
+      .then(location =>{
+        doAddReview(req, res, location);
+      })
+      .catch(err=>{
+        sendJSONresponse(res, 400, err)
+      })
+  }else {
+    sendJSONresponse(res, 404, {
+      "message": "Not found, location Id request"
+    })
+  }
 };

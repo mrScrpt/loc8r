@@ -2,6 +2,14 @@ const
   mongoose = require('mongoose')
   ,Loc = mongoose.model('Location');
 
+//Вспомагательная функция, которая отпраляет запросы и статус
+const sendJSONresponse = function(res, status, content) {
+  res.status(status);
+  res.json(content);
+};
+
+
+
 //модуль для перевода радиан в километры и обратно
 const theEarth = (function() {
   const earthRadius = 6371;
@@ -19,10 +27,20 @@ const theEarth = (function() {
     getRadsFromDistance
   };
 })();
-//Вспомагательная функция, которая отпраляет запросы и статус
-const sendJSONresponse = function(res, status, content) {
-  res.status(status);
-  res.json(content);
+//функция для упаковки результатов в массив для ответа api
+const buildLocationList = function(req, res, results) {
+  const locations = [];
+  results.forEach((doc)=> {
+    locations.push({
+      distance: theEarth.getRadsFromDistance(doc.dist.calculated),
+      name: doc.name,
+      address: doc.address,
+      rating: doc.rating,
+      facilities: doc.facilities,
+      _id: doc._id
+    });
+  });
+  return locations;
 };
 module.exports.locationsListByDistance = function(req, res) {
   const
@@ -66,25 +84,35 @@ module.exports.locationsListByDistance = function(req, res) {
 };
 
 
-//функция для упаковки результатов в массив для ответа api
-const buildLocationList = function(req, res, results) {
-  const locations = [];
-  results.forEach((doc)=> {
-    locations.push({
-      distance: theEarth.getRadsFromDistance(doc.dist.calculated),
-      name: doc.name,
-      address: doc.address,
-      rating: doc.rating,
-      facilities: doc.facilities,
-      _id: doc._id
-    });
-  });
-  return locations;
-};
-
-
 module.exports.locationsCreate = function(req, res) {
-  console.log('Finding location details' + res);
+  Loc
+    .create({
+      name: req.body.name
+      ,address: req.body.address
+      ,facilities: req.body.facilities.split(',')
+      ,coords: [parseFloat(req.body.lng), parseFloat(req.body.lat)]
+      ,openingTime: [
+        {
+          days: req.body.days1
+          ,opening: req.body.opening1
+          ,closing: req.body.closing1
+          ,closed: req.body.closed1
+        }
+        ,{
+          days: req.body.days2
+          ,opening: req.body.opening2
+          ,closing: req.body.closing2
+          ,closed: req.body.closed2
+        }
+      ]
+    })
+    .then(data=>{
+      sendJSONresponse(res, 400, data)
+    })
+    .catch(err=>{
+      sendJSONresponse(res, 400, err)
+    })
+
 };
 
 module.exports.locationsReadOne = function(req, res) {
