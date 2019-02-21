@@ -3,17 +3,20 @@ const
   ,Loc = mongoose.model('Location');
 
 //модуль для перевода радиан в километры и обратно
-const theEarth = (()=>{
+const theEarth = (function() {
   const earthRadius = 6371;
+
   const getDistanceFromRads = (rads)=>{
-    return parseFloat( rads * earthRadius);
+    return parseFloat(rads * earthRadius);
   };
+
   const getRadsFromDistance = (distance)=>{
-    return parseFloat( distance / earthRadius);
+    return parseFloat(distance / earthRadius);
   };
+
   return {
-    getDistanceFromRads
-    ,getRadsFromDistance
+    getDistanceFromRads,
+    getRadsFromDistance
   };
 })();
 //Вспомагательная функция, которая отпраляет запросы и статус
@@ -27,19 +30,14 @@ module.exports.locationsListByDistance = function(req, res) {
     ,lat = parseFloat(req.query.lat)
     ,maxDistance = parseFloat(req.query.maxDistance);
 
+    //Настройки для точки отсчета
     const point = {
       type: "Point",
       coordinates: [lng, lat]
     };
 
-    var geoOptions = {
-      spherical: true,
-      maxDistance: theEarth.getRadsFromDistance(maxDistance),
-      num: 2
-    };
 
-    console.log('geoOptions: ' + geoOptions);
-    if ((!lng && lng!==0) || (!lat && lat!==0)) {
+    if ((!lng && lng!==0) || (!lat && lat!==0) || ! maxDistance) {
       console.log('locationsListByDistance missing params');
       sendJSONresponse(res, 404, {
         "message": "lng, lat and maxDistance query parameters are all required"
@@ -52,12 +50,12 @@ module.exports.locationsListByDistance = function(req, res) {
           '$geoNear': {
             'near': point,
             'spherical': true,
-            'distanceField': 'dist.calculated',
-            'maxDistance': theEarth.getRadsFromDistance(maxDistance),
+            'distanceField': 'dist.calculated'
+            ,'maxDistance': theEarth.getDistanceFromRads(maxDistance)
 
           }
         }],
-        function(err, results) {
+        (err, results)=> {
           if (err) {
             sendJSONresponse(res, 404, err);
           } else {
@@ -66,14 +64,18 @@ module.exports.locationsListByDistance = function(req, res) {
           }
         }
       )
-    };
+    }
 };
+
+
+
 var buildLocationList = function(req, res, results) {
-  console.log('buildLocationList:');
+  //console.log('buildLocationList:');
   var locations = [];
   results.forEach(function(doc) {
+    console.log("Дистанция", theEarth.getRadsFromDistance(doc.dist.calculated));
     locations.push({
-      distance: doc.dist.calculated,
+      distance: theEarth.getRadsFromDistance(doc.dist.calculated),
       name: doc.name,
       address: doc.address,
       rating: doc.rating,
