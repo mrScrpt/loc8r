@@ -138,3 +138,100 @@ module.exports.reviewsCreate = (req, res)=>{
     })
   }
 };
+
+
+module.exports.reviewsUpdateOne= (req, res) =>{
+  if(!req.params.locationid || !req.params.reviewid){
+    sendJSONresponse(res, 404, {
+      "message" : " Not found, location id and review id are are both required"
+    });
+    return;
+  }
+  Loc
+    .findById(req.params.locations)
+    .select('reviews')
+    .exec()
+    .then(location =>{
+      if(!location){
+        sendJSONresponse(res, 404, {
+          "message": "location id not found"
+        });
+        return;
+      }
+      if (location.reviews && location.reviews.length > 0){
+        const thisReview = location.reviews.id(req.params.reviewid);
+        if(!thisReview){
+          sendJSONresponse(res, 404, {
+            "message": "review not found"
+          });
+        }else {
+          thisReview.author = req.body.author;
+          thisReview.rating = req.body.rating;
+          thisReview.reviewText = req.body.reviewText;
+          location
+            .save()
+            .then(location=>{
+              updateAverageRating(location._id);
+              sendJSONresponse(res, 200, thisReview);
+            })
+            .catch(err=>{
+              sendJSONresponse(res, 404, err)
+            })
+        }
+      }else {
+        sendJSONresponse(res, 404, {
+          "message": "No reviews to update"
+        })
+      }
+    })
+    .catch(err => {
+      sendJSONresponse(res, 400, err)
+    })
+};
+
+
+module.exports.reviewsDeleteOne = (req, res) =>{
+  if(!req.params.locationid || !req.params.reviewid){
+    sendJSONresponse(res, 404, {
+      "message":"Not found, location id and review id are both require"
+    });
+    return;
+  }
+  Loc
+    .findById(locationid)
+    .select('reviews')
+    .exec()
+    .then(location=>{
+      if(!location){
+        sendJSONresponse(res, 404, {
+          "message":"location id not found"
+        });
+        return;
+      }
+      if (location.reviews && location.reviews.length > 0){
+        if(!location.reviews.id(req.params.reviewid)){
+          sendJSONresponse(res, 404, {
+            "message": "reviews not found"
+          });
+        }else {
+          location.reviews.id(req.params.reviewid).remove()
+          location
+            .save()
+            .then(()=>{
+              updateAverageRating(location._id);
+              sendJSONresponse(res, 204, null);
+            })
+            .catch(err=>{
+              sendJSONresponse(res, 404, err)
+            })
+        }
+      } else {
+        sendJSONresponse(res, 404, {
+          "message": "No review to delete"
+        });
+      }
+    })
+    .catch(err=>{
+      sendJSONresponse(res, 404, err)
+    })
+};
