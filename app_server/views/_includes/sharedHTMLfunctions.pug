@@ -1,5 +1,18 @@
 mixin outputRating(rating)
-	- for(let i = 1; i < rating; i++)
+	- for(let i = 0; i < rating; i++)
 		span.glyphicon.glyphicon-star
-	- for(let i = rating; i <= 5; i++)
+	- for(let i = rating; i < 5; i++)
 		span.glyphicon.glyphicon-star-empty
+
+
+mixin formatDate(dateString)
+	-
+		const date = new Date(dateString);
+		const mountName = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+		const d = date.getDate();
+		const m = mountName[date.getMonth()];
+		const y = date.getFullYear();
+		const output = `${d} ${m} ${y}`;
+
+	=output
+

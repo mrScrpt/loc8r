@@ -1,4 +1,64 @@
-module.exports.homeList = (req, res)=>{
+const request = require('request-promise');
+
+//Настройки сервера - локальный или продакшен
+let apiOption = {
+  server: "http://localhost:3000/"
+};
+if (process.env.NODE_ENV === 'production'){
+  apiOption.server = "https://gentle-waters-54173.herokuapp.com/";
+}
+
+
+//Дополнительные функции
+//Функция обработки ошибок
+const _showError = (req, res, status) =>{
+  let title, content;
+  if(status === 404){
+    title = "404, страница не найдена";
+    content = "Запрашиваемая вами страница ненайдена, проверьте правильность url";
+  }else {
+    title = status + ", что-то пошло не так";
+    content = "Непредвиденная ошибка, проверьте правильность запрашиваемых данных";
+  }
+
+  res.status(status);
+
+  res.render('generic-text',{
+    title: title
+    ,content: content
+  })
+
+};
+// форматирование расстояния
+const _formatDistance = (distance)=>{
+  if(!distance && !(distance instanceof Number)){
+    console.log("distance is empty or not a number");
+    return;
+  }
+  let numDistance, unit;
+  if(distance > 1){
+    numDistance = parseFloat(distance).toFixed(1);
+    unit = ' км';
+  }else {
+    numDistance = parseInt(distance * 1000, 10)
+    unit = ' м'
+  }
+  return numDistance + unit;
+};
+
+
+// Функции рендеринга для контроллеров
+// Домашняя страница
+const renderHomePage = (req, res, responseBody)=>{
+  let message;
+  if(!(responseBody instanceof Array)){
+    message = "API lookup error";
+    responseBody = [];
+  }else {
+    if(!responseBody.length){
+      message = "Нет мест поблизости";
+    }
+  }
   res.render('locations-list', {
     title: 'Loc8r - найди место для работы'
     ,pageHeader:{
@@ -6,80 +66,90 @@ module.exports.homeList = (req, res)=>{
       ,strapline: 'Поиск ближайших мест с Wi-Fi'
     }
     ,sidebar: 'Это приложение служит инструсентом поиска мест для доступа к сети интернет, которые распологаются поблизости от вас'
-    ,locations: [
-      {
-        name: 'Starcups'
-        ,address: 'Московский проспект, 208'
-        ,rating: 3
-        ,facilities: ['Горячие напитка', 'Еда', 'Премиум доступ к Wi-Fi']
-        ,distance: '100 метров'
-      }
-      , {
-        name: 'Кайе HERO'
-        ,address: 'ул. Гагарнина 32-Б'
-        ,rating: 5
-        ,facilities: ['Горячие напитка', 'Еда', 'Премиум доступ к Wi-Fi', 'Шоу']
-        ,distance: '5000 метров'
-      }
-      , {
-        name: 'No Drive'
-        ,address: 'ул. Северная, 26'
-        ,rating: 2
-        ,facilities: ['Горячие напитка', 'Премиум доступ к Wi-Fi']
-        ,distance: '1442 метра'
-      }
-    ]
+    ,locations: responseBody
+    ,message: message
   })
 };
-
-module.exports.locationInfo = (req, res)=>{
+const renderDetailPage = (req, res, locDetail)=>{
+  /*console.log(locDetail.name);
+  console.log(locDetail);*/
   res.render('locations-info', {
-    title: 'Starcups'
-    ,pageHeader: {title: 'Starcups'}
+    title: locDetail.name
+    ,pageHeader: {title: locDetail.name}
     ,sidebar: {
       context: 'Заведени имеет отличный дизайн интерьера, который придется по душе любому ценителю кофе'
       ,callToAction: 'Если вы посещали это заведение - оставьте свой отзыв, возможно он будет полезен другим людям!'
     }
-    ,location:{
-      name: 'Starcups'
-      ,address: 'Московский проспект, 208'
-      ,rating: 4
-      ,facilities: ['Горячие напитка', 'Еда', 'Премиум доступ к Wi-Fi']
-      ,coords: {lat: 51.45, lng: -0.9690}
-      ,openingTimes: [
-        {
-          days: 'Monday - Friday',
-          opening: '7:00am',
-          closing: '7:00pm',
-          closed: false
-        }
-        , {
-          days: 'Saturday',
-          opening: '8:00',
-          closing: '17:00',
-          closed: false
-        }
-        , {
-          days: 'Sunday',
-          closed: true
-        }
-      ]
-      ,reviews: [
-        {
-          author: 'Simon Holmes',
-          rating: 5,
-          timestamp: '16 July 2013',
-          reviewText: 'What a great place. I can\'t say enough good things about it.'
-        }
-        , {
-          author: 'Charlie Chaplin',
-          rating: 3,
-          timestamp: '16 June 2013',
-          reviewText: 'It was okay. Coffee wasn\'t great, but the wifi was fast.'
-        }
-      ]
-    }
+    ,location:locDetail
   })
+};
+
+// Контроллеры
+module.exports.homeList = (req, res)=>{
+  var requestOptions, path;
+  path = "api/locations";
+  requestOptions = {
+    uri: apiOption.server + path
+    ,method: "GET"
+    ,json:{}
+    ,qs: {
+      lng: -22.5
+      ,lat: 0.1
+      ,maxDistance: 6000
+    }
+  };
+  request(requestOptions)
+    .then((body)=>{
+      const data = body;
+      if (res.statusCode === 200 && data.length){
+        for (let i = 0; i < data.length; i++){
+          data[i].distance = _formatDistance(data[i].distance);
+        }
+      }
+
+      renderHomePage(req, res, data);
+    })
+    .catch(err=>{
+      console.log(err.message);
+      const data = "";
+      renderHomePage(req, res, data);
+
+    });
+};
+
+module.exports.locationInfo = (req, res)=>{
+  let requestOption, path;
+
+  path = "api/locations/" + req.params.locationid;
+  requestOption={
+    uri: apiOption.server + path
+    ,method: "GET"
+    ,simple: false
+    ,resolveWithFullResponse: true
+    ,json:{}
+
+  };
+  request(requestOption)
+    .then((response)=>{
+      //console.log("Удача: ", response.body);
+      if(response.statusCode === 200){
+        const data = response.body;
+        data.coords = {
+          lng: response.body.coords[0]
+          ,lat: response.body.coords[1]
+        };
+        renderDetailPage(req, res, data)
+      }else{
+        console.log("Статус: ", response.statusCode);
+        _showError(req, res, response.statusCode)
+      }
+    })
+    .catch(err=>{
+      console.log("НЕ Удача: ", err);
+      const data = "";
+      renderDetailPage(req, res, data);
+    });
+
 };
 
 module.exports.addReview = (req, res)=>{

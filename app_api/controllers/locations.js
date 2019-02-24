@@ -121,12 +121,14 @@ module.exports.locationsReadOne = function(req, res) {
       .findById(req.params.locationid)
       .exec((err, location)=>{
         if(!location){
+          console.log("11111111111111111111111");
           sendJSONresponse(res, 404, {
             "message": "location not found"
           });
           return;
         }else if (err){
-          sendJSONresponse(res, 200, err);
+
+          sendJSONresponse(res, 404, err);
           return;
         }
         sendJSONresponse(res, 200, location)
