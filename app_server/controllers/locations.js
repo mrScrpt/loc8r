@@ -45,7 +45,14 @@ const _formatDistance = (distance)=>{
   }
   return numDistance + unit;
 };
+// Получение местоположения
+const getLocation = (req, res)=>{
+  const promise = new Promise((resolve, reject)=>{
 
+  });
+  let requestOption, pa
+
+};
 
 // Функции рендеринга для контроллеров
 // Домашняя страница
@@ -81,6 +88,12 @@ const renderDetailPage = (req, res, locDetail)=>{
       ,callToAction: 'Если вы посещали это заведение - оставьте свой отзыв, возможно он будет полезен другим людям!'
     }
     ,location:locDetail
+  })
+};
+const renderReviewForm = (req, res, locDetail)=>{
+  res.render('location-review-form', {
+    title: 'Review Starcups on Loc8r',
+    pageHeader: { title: 'Review Starcups' }
   })
 };
 
@@ -153,8 +166,12 @@ module.exports.locationInfo = (req, res)=>{
 };
 
 module.exports.addReview = (req, res)=>{
-  res.render('location-review-form', {
+  renderReviewForm(req, res)
+};
+
+module.exports.doReview = (req, res)=>{
+  /*res.render('location-review-form', {
     title: 'Review Starcups on Loc8r',
     pageHeader: { title: 'Review Starcups' }
-  })
+  })*/
 };
