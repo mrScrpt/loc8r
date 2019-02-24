@@ -92,6 +92,8 @@ module.exports.homeList = (req, res)=>{
     uri: apiOption.server + path
     ,method: "GET"
     ,json:{}
+    ,simple: false
+    ,resolveWithFullResponse: true
     ,qs: {
       lng: -22.5
       ,lat: 0.1
@@ -99,18 +101,16 @@ module.exports.homeList = (req, res)=>{
     }
   };
   request(requestOptions)
-    .then((body)=>{
-      const data = body;
-      if (res.statusCode === 200 && data.length){
-        for (let i = 0; i < data.length; i++){
-          data[i].distance = _formatDistance(data[i].distance);
+    .then((response)=>{
+      const data = response;
+      if (data.statusCode === 200 && data.body.length){
+        for (let i = 0; i < data.body.length; i++){
+          data.body[i].distance = _formatDistance(data.body[i].distance);
         }
       }
-
-      renderHomePage(req, res, data);
+      renderHomePage(req, res, data.body);
     })
-    .catch(err=>{
-      console.log(err.message);
+    .catch(()=>{
       const data = "";
       renderHomePage(req, res, data);
 
