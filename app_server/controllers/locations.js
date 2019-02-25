@@ -45,13 +45,41 @@ const _formatDistance = (distance)=>{
   }
   return numDistance + unit;
 };
-// Получение местоположения
+// Получение местоположения - универсальная функция для отзывов и страницы с конкретным местоположением
 const getLocation = (req, res)=>{
   const promise = new Promise((resolve, reject)=>{
 
-  });
-  let requestOption, pa
+    let requestOption, path;
+    path = "api/locations/" + req.params.locationid;
+    requestOption={
+      uri: apiOption.server + path
+      ,method: "GET"
+      ,simple: false
+      ,resolveWithFullResponse: true
+      ,json:{}
 
+    };
+    request(requestOption)
+      .then((response)=>{
+        //console.log("Удача: ", response.body);
+        if(response.statusCode === 200){
+          const data = response.body;
+          data.coords = {
+            lng: response.body.coords[0]
+            ,lat: response.body.coords[1]
+          };
+          resolve(data);
+        }else{
+          reject(response);
+        }
+      })
+      .catch(err=>{
+        console.log("НЕ Удача: ", err);
+        const data = "";
+        renderDetailPage(req, res, data);
+      });
+  });
+  return promise;
 };
 
 // Функции рендеринга для контроллеров
@@ -78,8 +106,6 @@ const renderHomePage = (req, res, responseBody)=>{
   })
 };
 const renderDetailPage = (req, res, locDetail)=>{
-  /*console.log(locDetail.name);
-  console.log(locDetail);*/
   res.render('locations-info', {
     title: locDetail.name
     ,pageHeader: {title: locDetail.name}
@@ -92,8 +118,9 @@ const renderDetailPage = (req, res, locDetail)=>{
 };
 const renderReviewForm = (req, res, locDetail)=>{
   res.render('location-review-form', {
-    title: 'Review Starcups on Loc8r',
-    pageHeader: { title: 'Review Starcups' }
+    title: locDetail.name
+    ,pageHeader: {title: `Отзыв о заведении "${locDetail.name}"`}
+
   })
 };
 
@@ -131,42 +158,27 @@ module.exports.homeList = (req, res)=>{
 };
 
 module.exports.locationInfo = (req, res)=>{
-  let requestOption, path;
-
-  path = "api/locations/" + req.params.locationid;
-  requestOption={
-    uri: apiOption.server + path
-    ,method: "GET"
-    ,simple: false
-    ,resolveWithFullResponse: true
-    ,json:{}
-
-  };
-  request(requestOption)
-    .then((response)=>{
-      //console.log("Удача: ", response.body);
-      if(response.statusCode === 200){
-        const data = response.body;
-        data.coords = {
-          lng: response.body.coords[0]
-          ,lat: response.body.coords[1]
-        };
-        renderDetailPage(req, res, data)
-      }else{
-        console.log("Статус: ", response.statusCode);
-        _showError(req, res, response.statusCode)
-      }
-    })
-    .catch(err=>{
-      console.log("НЕ Удача: ", err);
-      const data = "";
+  getLocation(req, res)
+    .then(data=>{
       renderDetailPage(req, res, data);
-    });
-
+    })
+    .catch(response=>{
+      console.log("Статус: ", response.statusCode);
+      _showError(req, res, response.statusCode)
+    })
 };
 
 module.exports.addReview = (req, res)=>{
-  renderReviewForm(req, res)
+  getLocation(req, res)
+    .then(data=>{
+      renderReviewForm(req, res, data);
+    })
+    .catch(response=>{
+      console.log("Статус: ", response.statusCode);
+      _showError(req, res, response.statusCode)
+    })
+
+
 };
 
 module.exports.doReview = (req, res)=>{
