@@ -120,7 +120,7 @@ const renderReviewForm = (req, res, locDetail)=>{
   res.render('location-review-form', {
     title: locDetail.name
     ,pageHeader: {title: `Отзыв о заведении "${locDetail.name}"`}
-
+    ,error: req.query.err
   })
 };
 
@@ -197,14 +197,27 @@ module.exports.doReview = (req, res)=>{
    ,method: "POST"
    ,json: postdata
  };
- request(requestOption)
-   .then(data=>{
-    if (data.statusCode === 201){
-      console.log('попали в условие', data.statusCode);
-      res.redirect(`/location/${locationid}`);
-    }
-   })
-   .catch(data=>{
-      _showError(req, res, data.statusCode);
-   })
+ // Проверка на пустые данные из формы
+ if (!postdata.author || !postdata.rating || !postdata.reviewText){
+   res.redirect(`/location/${locationid}/review/new?err=val`);
+ } else {
+   request(requestOption)
+     .then(data=>{
+       if (data.statusCode === 201){
+         console.log('попали в условие', data.statusCode);
+         res.redirect(`/location/${locationid}`);
+       }else if (data.statusCode === 400 && data.body.name === "ValidationError" ) {
+         res.redirect(`/location/${locationid}/review/new?err=val`);
+       }else {
+         console.error('Статус ошибки', data.statusCode);
+         console.log('Информация об ошибке', data.body.errors);
+         _showError(req, res, data.statusCode);
+       }
+     })
+     .catch(data=>{
+
+       _showError(req, res, data.statusCode);
+     })
+ }
+
 };
