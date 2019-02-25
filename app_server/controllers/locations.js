@@ -182,8 +182,29 @@ module.exports.addReview = (req, res)=>{
 };
 
 module.exports.doReview = (req, res)=>{
-  /*res.render('location-review-form', {
-    title: 'Review Starcups on Loc8r',
-    pageHeader: { title: 'Review Starcups' }
-  })*/
+ let requestOption, path, locationid, postdata;
+ locationid = req.params.locationid;
+ path = `api/locations/${locationid}/reviews`;
+ postdata = {
+   author: req.body.name
+   ,rating: parseInt(req.body.rating, 10)
+   ,reviewText: req.body.review
+ };
+ requestOption = {
+   uri: apiOption.server + path
+   ,simple: false
+   ,resolveWithFullResponse: true
+   ,method: "POST"
+   ,json: postdata
+ };
+ request(requestOption)
+   .then(data=>{
+    if (data.statusCode === 201){
+      console.log('попали в условие', data.statusCode);
+      res.redirect(`/location/${locationid}`);
+    }
+   })
+   .catch(data=>{
+      _showError(req, res, data.statusCode);
+   })
 };

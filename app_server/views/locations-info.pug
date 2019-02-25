@@ -60,7 +60,7 @@ block content
 												+outputRating(review.rating)
 											span.reviewAuthor #{review.author}
 											small.reviewTimestamp
-												+formatDate(review.timestamp)
+												+formatDate(review.createdOn)
 										.col-xs-12
 											p !{(review.reviewText).replace(/\n/g, '<br>')}
 
