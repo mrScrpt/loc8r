@@ -96,6 +96,7 @@ const renderReviewForm = (req, res, locDetail)=>{
     title: locDetail.name
     ,pageHeader: {title: `Отзыв о заведении "${locDetail.name}"`}
     ,error: req.query.err
+    ,url: req.originalUrl
   })
 };
 

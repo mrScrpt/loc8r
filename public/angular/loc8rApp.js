@@ -25,7 +25,6 @@ const formatDistance = ()=>{
 };
 
 
-
 //Сниппеты
 const ratingStar = ()=>{
  return {
@@ -39,7 +38,12 @@ const ratingStar = ()=>{
 //Сервисы
 //запрос к API
 const loc8rData = function ($http) { //функция, должна быть не  стрелочной
-  return $http.get('/api/locations?lng=-0.79&lat=51.3&maxDistance=20');
+  const locationByCoords = (lat,lng)=>{
+    return $http.get(`/api/locations?lng=${lng}&lat=${lat}&maxDistance=1500`);
+  };
+  return{
+    locationByCoords: locationByCoords
+  }
 };
 //Получение геолокации
 const geolocation = function () {
@@ -60,10 +64,14 @@ const geolocation = function () {
 const locationListCtrl = ($scope, loc8rData, geolocation)=>{
   $scope.message = "Определение вашего местоположения...";
   geolocation.getPosition
-    .then(()=>{
+    .then((position)=>{
+      const
+        lat = position.coords.latitude,
+        lng = position.coords.longitude;
       $scope.message = "Поиск место поблизости...";
-      loc8rData
+      loc8rData.locationByCoords(lat, lng)
         .then((res)=>{
+          console.log(lat,lng);
           const data = res.data;
           $scope.message = data.length > 0 ? "" : "Нет подходящих мест поблизости"
           $scope.data = {locations: data};
