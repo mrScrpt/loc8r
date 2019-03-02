@@ -31,7 +31,7 @@ const ratingStar = ()=>{
    scope: {
      thisRating: '=rating'
    }
-   ,templateUrl: '/angular/templates/rating-stars.html'
+   ,templateUrl: '/angular/templates/ratingStars.template.html'
  }
 };
 

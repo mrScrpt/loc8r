@@ -1,4 +1,4 @@
-doctype html
+doctype
 html(ng-app="loc8rApp")
   head
     meta(name='viewport', content='width=device-width, initial-scale=1.0')
@@ -11,9 +11,9 @@ html(ng-app="loc8rApp")
         .navbar-header
           a.navbar-brand(href='/') loc8r
           button.navbar-toggle(
-            type='button',
-            data-toggle='collapse'
-            data-target='#navbar-main'
+          type='button',
+          data-toggle='collapse'
+          data-target='#navbar-main'
           )
             span.icon-bar
             span.icon-bar
@@ -23,13 +23,25 @@ html(ng-app="loc8rApp")
             li
               a(href='/about/') About
     .container
-      block content
+      div(ng-view)
+        block content
       footer
         .row
           .col-sx-12
             small &copy; Simon Holmes
-    script(src='/angular/angular.js')
-    script(src='/angular/loc8rApp.js')
-    script(src='/javascripts/jq-1-11-1.js')
-    script(src='/bootstrap/js/bootstrap.min.js')
-    script(src='/javascripts/validation.js')
+      //-script(src='/angular/angular.js')
+      //-script(src='/angular/angular-route.min.js')
+      //- script(src='/angular/loc8r.min.js')
+      //-script(src='/app.js')
+      //-script(src='/home/home.controller.js')
+      //-script(src='/common/services/loc8rData.service.js')
+      //-script(src='/common/services/geolocation.service.js')
+      //-script(src='/common/directives/ratingStars/ratingStars.directive.js')
+      //-script(src='/common/directives/footerGeneric/footerGeneric.directive.js')
+      //-script(src='/common/directives/navigation/navigation.directive.js')
+      //-script(src='/common/directives/pageHeader/pageHeader.directive.js')
+      //-script(src='/common/filters/formatDistance.filter.js')
+      //-script(src='/javascripts/jq-1-11-1.js')
+      //-script(src='/bootstrap/js/bootstrap.min.js')
+      //-script(src='/javascripts/validation.js')
+

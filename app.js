@@ -6,26 +6,37 @@ const createError = require('http-errors')
   ,path = require('path')
   ,cookieParser = require('cookie-parser')
   ,logger = require('morgan')
+  //,uglifyJs = require("uglify-js")
+  ,fs = require('fs')
   ,routes = require('./app_server/routes/locations')
-  ,users = require('./app_server/routes/users')
   ,routesApi = require('./app_api/routes/index')
+  //,users = require('./app_server/routes/users')
   ,app = express();
 
-
+//require('.app_api/routes')(app);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'app_server', 'views'));
 app.set('view engine', 'pug');
+
+
 
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'app_client')));
 
-app.use('/', routes);
+//app.use('/', routes);
 app.use('/api', routesApi);
-app.use('/users', users);
+//app.use('/users', users);
+app.use((req,res)=>{
+  res.sendFile(path.join(__dirname, 'app_client', 'index.html'))
+});
+
+
+
 
 
 // catch 404 and forward to error handler
@@ -43,5 +54,9 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
+// app.use((req,res)=>{
+//   res.sendfile(path.join(__dirname, 'app_client', 'index.html'))
+// });
 
 module.exports = app;
