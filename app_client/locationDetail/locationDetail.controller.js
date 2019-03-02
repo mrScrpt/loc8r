@@ -23,8 +23,17 @@
         });
       vm.popupReviewForm = function () {
         const modalInstance = $uibModal.open({
-          templateUrl: '/reviewModal/reviewModal.view.html',
-          controller: 'reviewModalCtrl as vm',
+          templateUrl: '/reviewModal/reviewModal.view.html'
+          ,controller: 'reviewModalCtrl as vm'
+          ,resolve: {
+            locationData: ()=>{
+              return{
+                locationid: vm.locationid
+                ,locationName: vm.data.location.data.name
+              }
+            }
+          }
+
         }).result.catch(function(res) {
           if (!(res === 'cancel' || res === 'escape key press')) {
             throw res;
