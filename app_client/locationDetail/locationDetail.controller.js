@@ -22,7 +22,7 @@
           console.log(err);
         });
       vm.popupReviewForm = function () {
-        const modalInstance = $uibModal.open({
+        const ubiModalInstance = $uibModal.open({
           templateUrl: '/reviewModal/reviewModal.view.html'
           ,controller: 'reviewModalCtrl as vm'
           ,resolve: {
@@ -30,15 +30,25 @@
               return{
                 locationid: vm.locationid
                 ,locationName: vm.data.location.data.name
-              }
+              };
             }
           }
 
-        }).result.catch(function(res) {
-          if (!(res === 'cancel' || res === 'escape key press')) {
-            throw res;
-          }
         });
+        // .result.catch(function(res) {
+        //   if (!(res === 'cancel' || res === 'escape key press')) {
+        //     throw res;
+        //   }
+        // });
+        ubiModalInstance.result
+          .then((data)=>{
+            vm.data.location.data.reviews.push(data.data)
+          })
+          .catch(function(res) {
+            if (!(res === 'cancel' || res === 'escape key press')) {
+              throw res;
+            }
+          });
          /* .then(data=>{
             console.log(data)
           })

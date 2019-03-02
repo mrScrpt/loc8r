@@ -12,9 +12,13 @@
     const locationById = (locationid)=>{
       return $http.get(`/api/locations/${locationid}`)
     };
+    const addReviewById = (locationid, data)=>{
+      return $http.post(`/api/locations/${locationid}/reviews`, data)
+    };
     return{
       locationByCoords: locationByCoords
       ,locationById:locationById
+      ,addReviewById:addReviewById
     }
   }
 })();
